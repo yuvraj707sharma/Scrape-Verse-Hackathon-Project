@@ -1,0 +1,8 @@
+{
+  "name": "Social Listening and Competitive Intelligence",
+  "description": "An automated social listening and competitive intelligence system for JECRC University, aggregating internet mentions and analyzing sentiment, placements, fees, and rival universities using Gemini AI.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
