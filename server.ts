@@ -546,7 +546,16 @@ function runSimpleAggregator() {
   });
 
   // Keep recommendations, matrix, complaint catalogs from previous or set defaults
-  const previousSummary = dbState.analysisSummary || initialAnalysisSummary;
+  const previousSummary = dbState.analysisSummary || {
+    sentimentOverTime: [],
+    topicDistribution: { academics: 0, placements: 0, infrastructure: 0, faculty: 0, fees: 0, other: 0 },
+    competitorMentions: {},
+    actionableRecommendations: [],
+    sentimentByProgram: {},
+    topicDistributionByProgram: {},
+    competitorComparisonMatrixByProgram: {},
+    complaintsCatalog: []
+  };
 
   // Program lists
   const programs = ["Computer Science", "Mechanical Engineering", "Civil Engineering", "MBA", "BSc Nursing", "BPT (Physiotherapy)"];
