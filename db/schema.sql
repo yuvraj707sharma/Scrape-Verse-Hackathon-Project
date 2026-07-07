@@ -1,76 +1,51 @@
--- Social Listening & Competitive Intelligence — MySQL 9.x schema
--- Run: mysql -u <user> -p <dbname> < schema.sql
+-- Social Listening & Competitive Intelligence — PostgreSQL (Supabase) schema
 
 CREATE TABLE IF NOT EXISTS mentions (
-    id               BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id               BIGSERIAL PRIMARY KEY,
     source_platform  VARCHAR(50)   NOT NULL,   -- 'reddit', 'youtube', 'news', etc.
     source_url       VARCHAR(1000),
     author_handle    VARCHAR(255),
     text_content     TEXT          NOT NULL,
     engagement_score INT           DEFAULT 0,  -- upvotes / likes
-    posted_at        DATETIME,
-    raw_metadata     JSON,
-    created_at       TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_platform  (source_platform),
-    INDEX idx_posted_at (posted_at)
+    posted_at        TIMESTAMP WITH TIME ZONE,
+    raw_metadata     JSONB,
+    created_at       TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+CREATE INDEX IF NOT EXISTS idx_platform ON mentions (source_platform);
+CREATE INDEX IF NOT EXISTS idx_posted_at ON mentions (posted_at);
 
 CREATE TABLE IF NOT EXISTS mentions_analyzed (
-    id                  BIGINT AUTO_INCREMENT PRIMARY KEY,
-    mention_id          BIGINT       NOT NULL,
+    id                  BIGSERIAL PRIMARY KEY,
+    mention_id          BIGINT       NOT NULL REFERENCES mentions(id),
     sentiment_score     FLOAT,                          -- -1.0 to 1.0
     topic_category      VARCHAR(100),                   -- see TOPIC_CATEGORIES in extractor.py
-    entities_mentioned  JSON,                           -- ["JECRC", "MUJ", ...]
+    entities_mentioned  JSONB,                          -- ["JECRC", "MUJ", ...]
     key_phrase_summary  VARCHAR(500),
-    embedding           JSON,                           -- text-embedding-004 output (MySQL 8 fallback)
-    -- NEW fields (Step 2)
+    embedding           JSONB,                          -- text-embedding-004 output
     is_flagged          BOOLEAN      DEFAULT FALSE,
     escalation_reason   VARCHAR(500) NULL,
-    escalation_status   ENUM('none','investigating','resolved') DEFAULT 'none',
+    escalation_status   VARCHAR(50)  DEFAULT 'none' CHECK (escalation_status IN ('none', 'investigating', 'resolved')),
     program             VARCHAR(100) NULL,              -- 'CSE','MBA','BSc Nursing', etc.
-    positives           JSON         NULL,              -- ["praise phrase 1", ...]
-    negatives           JSON         NULL,              -- ["complaint phrase 1", ...]
-    created_at          TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (mention_id) REFERENCES mentions(id),
-    INDEX idx_topic     (topic_category),
-    INDEX idx_mention   (mention_id),
-    INDEX idx_flagged   (is_flagged)
+    positives           JSONB        NULL,              -- ["praise phrase 1", ...]
+    negatives           JSONB        NULL,              -- ["complaint phrase 1", ...]
+    created_at          TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+CREATE INDEX IF NOT EXISTS idx_topic ON mentions_analyzed (topic_category);
+CREATE INDEX IF NOT EXISTS idx_mention ON mentions_analyzed (mention_id);
+CREATE INDEX IF NOT EXISTS idx_flagged ON mentions_analyzed (is_flagged);
 
 -- Keyword and competitor management tables (Step 3)
 CREATE TABLE IF NOT EXISTS tracked_keywords (
-    id          BIGINT AUTO_INCREMENT PRIMARY KEY,
-    keyword     VARCHAR(255) NOT NULL,
-    category    ENUM('brand','competitor','program','general') DEFAULT 'general',
-    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE KEY uq_keyword (keyword)
+    id          BIGSERIAL PRIMARY KEY,
+    keyword     VARCHAR(255) NOT NULL UNIQUE,
+    category    VARCHAR(50)  DEFAULT 'general' CHECK (category IN ('brand', 'competitor', 'program', 'general')),
+    created_at  TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS tracked_competitors (
-    id           BIGINT AUTO_INCREMENT PRIMARY KEY,
-    name         VARCHAR(255) NOT NULL,
+    id           BIGSERIAL PRIMARY KEY,
+    name         VARCHAR(255) NOT NULL UNIQUE,
     short_name   VARCHAR(100),
     website_url  VARCHAR(500),
-    created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE KEY uq_name (name)
+    created_at   TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
-
--- Semantic search (MySQL 9+):
--- SELECT m.text_content, ma.sentiment_score,
---        DISTANCE(ma.embedding, @query_vec, 'COSINE') AS dist
--- FROM   mentions_analyzed ma
--- JOIN   mentions m ON m.id = ma.mention_id
--- ORDER  BY dist ASC
--- LIMIT  10;
-
--- MySQL 8 fallback: store embedding as JSON, compute cosine in Python.
--- ALTER TABLE mentions_analyzed MODIFY COLUMN embedding JSON;
-
--- Migration: run these if upgrading an existing DB (skip if running fresh)
--- ALTER TABLE mentions_analyzed
---     ADD COLUMN is_flagged        BOOLEAN      DEFAULT FALSE,
---     ADD COLUMN escalation_reason VARCHAR(500) NULL,
---     ADD COLUMN escalation_status ENUM('none','investigating','resolved') DEFAULT 'none',
---     ADD COLUMN program           VARCHAR(100) NULL,
---     ADD COLUMN positives         JSON         NULL,
---     ADD COLUMN negatives         JSON         NULL;

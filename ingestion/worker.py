@@ -8,7 +8,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from dotenv import load_dotenv
 
-from db.connection import get_conn
+from db.connection import get_conn, put_conn
 from ingestion.adapters.base import Mention
 from ingestion.adapters.reddit import RedditAdapter
 from ingestion.adapters.spider_web import SpiderWebAdapter
@@ -23,6 +23,7 @@ _INSERT_SQL = """
         (source_platform, source_url, author_handle, text_content,
          engagement_score, posted_at, raw_metadata)
     VALUES (%s, %s, %s, %s, %s, %s, %s)
+    RETURNING id
 """
 
 
@@ -45,11 +46,13 @@ def _save_mentions(mentions: list[Mention]) -> list[int]:
                     json.dumps(m.raw_metadata),
                 ),
             )
-            ids.append(cursor.lastrowid)
+            row = cursor.fetchone()
+            if row:
+                ids.append(row[0])
         conn.commit()
     finally:
         cursor.close()
-        conn.close()
+        put_conn(conn)
     return ids
 
 
@@ -94,7 +97,7 @@ def _load_keywords() -> list[str]:
                 return [r[0] for r in rows]
         finally:
             cursor.close()
-            conn.close()
+            put_conn(conn)
     except Exception as e:
         print(f"[worker] DB keyword load failed: {e}")
     # Fallback

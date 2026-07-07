@@ -7,7 +7,7 @@ import dotenv from 'dotenv';
 
 
 import { Keyword, Competitor, Mention, AnalysisSummary, TopicType, SourceType, SentimentType } from './src/types.ts';
-import { fetchKeywordsFromDB, fetchCompetitorsFromDB, fetchMentionsFromDB, insertKeywordToDB, deleteKeywordFromDB, insertCompetitorToDB, deleteCompetitorFromDB } from './mysqlService.ts';
+import { fetchKeywordsFromDB, fetchCompetitorsFromDB, fetchMentionsFromDB, insertKeywordToDB, deleteKeywordFromDB, insertCompetitorToDB, deleteCompetitorFromDB } from './dbService.ts';
 
 // Load environment variables
 dotenv.config();
@@ -805,4 +805,8 @@ async function startServer() {
   });
 }
 
-startServer();
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+  startServer();
+}
+
+export default app;
