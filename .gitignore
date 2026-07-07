@@ -11,3 +11,6 @@ skills/
 spider-browser/
 spider/
 tmp_spider_skills/
+
+db.json
+__pycache__/
