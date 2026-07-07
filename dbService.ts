@@ -4,8 +4,11 @@ import { Keyword, Competitor, Mention, SourceType, SentimentType, TopicType } fr
 
 dotenv.config();
 
+// Strip sslmode=require from URL because Node's pg module treats it as strict SSL and rejects self-signed certs
+const dbUrl = process.env.DATABASE_URL?.replace('?sslmode=require', '') || '';
+
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: dbUrl,
   ssl: { rejectUnauthorized: false }
 });
 
