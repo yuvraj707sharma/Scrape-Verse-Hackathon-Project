@@ -647,6 +647,25 @@ function runSimpleAggregator() {
   };
 }
 
+/**
+ * Helper function to provide the AI with a balanced sample of data.
+ * It takes the newest mentions, plus a random sample of historical mentions,
+ * ensuring the AI isn't biased completely toward new data nor stuck on old data.
+ */
+function getBalancedMentions(mentions: any[], totalLimit: number) {
+  if (mentions.length <= totalLimit) return mentions;
+  const newestCount = Math.floor(totalLimit / 2);
+  const newestMentions = mentions.slice(0, newestCount);
+  
+  const historicalMentions = mentions.slice(newestCount);
+  const randomCount = totalLimit - newestCount;
+  
+  const shuffledHistory = [...historicalMentions].sort(() => 0.5 - Math.random());
+  const selectedHistory = shuffledHistory.slice(0, randomCount);
+  
+  return [...newestMentions, ...selectedHistory];
+}
+
 // AI Chat with Internet Search Grounding
 app.post('/api/chat', async (req: Request, res: Response) => {
   const { message, history } = req.body;
@@ -671,7 +690,8 @@ app.post('/api/chat', async (req: Request, res: Response) => {
   }
 
   try {
-    const recentMentions = dbState.mentions.slice(0, 10).map(m => `"${m.text}" (Source: ${m.source})`).join('\n');
+    const balancedMentions = getBalancedMentions(dbState.mentions, 16);
+    const recentMentions = balancedMentions.map(m => `"${m.text}" (Source: ${m.source}, Date: ${m.date || 'Recent'})`).join('\n');
     const systemInstruction = `You are the JECRC Reputational Intelligence & Social Listening Assistant.
 Your task is to provide real-time reputational analysis, answer queries with high-quality insights, and search the web for external discussions, competitor trends, or comparisons.
 
@@ -696,7 +716,7 @@ Here is the current state of our monitored campus database:
 - Monitored Programs: Computer Science, Mechanical Engineering, Civil Engineering, MBA, BSc Nursing, BPT (Physiotherapy)
 - Major Competitors: Manipal University Jaipur (MUJ), Amity University Jaipur, Lovely Professional University (LPU), Jaipur National University (JNU)
 
-Here are some of the most recent actual conversations/mentions captured from students:
+Here is a balanced sample of actual conversations/mentions captured from students (including both latest trends and historical context):
 ${recentMentions}
 
 Provide high-level academic analysis, compare placements, infrastructure, faculty, and fees when asked based on conversations. Use markdown formatting.`;
@@ -778,11 +798,12 @@ app.post('/api/report', async (req: Request, res: Response) => {
 
   try {
     console.log('Generating Executive Report...');
+    const balancedMentions = getBalancedMentions(dbState.mentions, 80);
     const prompt = `You are a Chief Strategy Officer providing an executive-level reputational report for JECRC University.
 Analyze the following database of online mentions and social media conversations.
 
-Mentions Data:
-${JSON.stringify(dbState.mentions.slice(0, 50), null, 2)}
+Mentions Data (Balanced sample of latest trends and historical context):
+${JSON.stringify(balancedMentions, null, 2)}
 
 Provide a deeply analytical, comprehensive, and highly professional markdown report.
 Structure your report with the following sections:
