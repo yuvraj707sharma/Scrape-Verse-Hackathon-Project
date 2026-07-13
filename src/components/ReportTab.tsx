@@ -1,12 +1,26 @@
-import React, { useState } from 'react';
-import { FileText, Loader2, Download, Printer } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { FileText, Loader2, Download, Printer, FileDown } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import html2pdf from 'html2pdf.js';
 
 export default function ReportTab() {
   const [report, setReport] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const reportRef = useRef<HTMLDivElement>(null);
+
+  const downloadPDF = () => {
+    if (!reportRef.current) return;
+    const opt = {
+      margin:       0.5,
+      filename:     `JU_Social_Analyzer_Report_${new Date().toISOString().split('T')[0]}.pdf`,
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2, useCORS: true },
+      jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+    };
+    html2pdf().set(opt).from(reportRef.current).save();
+  };
 
   const generateReport = async () => {
     setIsLoading(true);
@@ -46,6 +60,13 @@ export default function ReportTab() {
         {report && (
           <div className="flex gap-3">
             <button 
+              onClick={downloadPDF}
+              className="flex items-center gap-2 px-4 py-2 bg-rose-600 hover:bg-rose-500 text-sm font-semibold rounded-lg transition-colors shadow-sm"
+            >
+              <FileDown className="w-4 h-4" />
+              Download PDF
+            </button>
+            <button 
               onClick={() => {
                 const blob = new Blob([report || ''], { type: 'text/markdown' });
                 const url = URL.createObjectURL(blob);
@@ -60,7 +81,7 @@ export default function ReportTab() {
               className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-sm font-semibold rounded-lg transition-colors shadow-sm"
             >
               <Download className="w-4 h-4" />
-              Download
+              Download MD
             </button>
             <button 
               onClick={() => window.print()}
@@ -112,7 +133,7 @@ export default function ReportTab() {
 
         {report && !isLoading && (
           <div className="max-w-4xl mx-auto bg-white p-10 rounded-2xl shadow-sm border border-slate-200">
-            <div className="prose prose-slate prose-headings:font-bold prose-h1:text-3xl prose-h2:text-2xl prose-a:text-indigo-600 max-w-none">
+            <div ref={reportRef} className="prose prose-slate prose-headings:font-bold prose-h1:text-3xl prose-h2:text-2xl prose-a:text-indigo-600 max-w-none">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
                 {report}
               </ReactMarkdown>
