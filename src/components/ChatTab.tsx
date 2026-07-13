@@ -2,6 +2,28 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, Loader2, ExternalLink } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import rehypeSanitize from 'rehype-sanitize';
+
+/**
+ * Strips any raw HTML tags from the AI response text before it even
+ * reaches the Markdown renderer.  This is the first line of defence
+ * against prompt-injection attacks that try to output <script>, <img
+ * onerror>, <iframe>, prompt(), alert() etc.
+ */
+function sanitizeAIText(raw: string): string {
+  return raw
+    // Remove <script>…</script> blocks (case-insensitive, multiline)
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    // Remove <iframe>, <object>, <embed>, <form>, <input>, <button>, <textarea>, <select>
+    .replace(/<\/?(iframe|object|embed|form|input|button|textarea|select|style|link|meta|base)[^>]*>/gi, '')
+    // Remove dangerous event-handler attributes anywhere in residual HTML
+    .replace(/\s*on\w+\s*=\s*["'][^"']*["']/gi, '')
+    // Remove javascript: URIs
+    .replace(/javascript\s*:/gi, 'blocked:')
+    // Remove data: URIs (can carry scripts)
+    .replace(/data\s*:[^\s)"']*/gi, 'blocked:')
+    .trim();
+}
 
 interface ChatMessage {
   role: 'user' | 'model';
@@ -62,12 +84,21 @@ export default function ChatTab() {
         })
       });
 
+      // Guard against non-JSON responses (e.g. Render 502 HTML pages)
+      const contentType = response.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        throw new Error(
+          `Server returned an unexpected response (${response.status}). ` +
+          'The service may be waking up — please try again in a few seconds.'
+        );
+      }
+
       const data = await response.json();
       
       if (response.ok) {
         setMessages(prev => [...prev, {
           role: 'model',
-          content: data.text,
+          content: sanitizeAIText(data.text || ''),
           references: data.references
         }]);
       } else {
@@ -113,7 +144,10 @@ export default function ChatTab() {
                   <p>{msg.content}</p>
                 ) : (
                   <div className="prose prose-sm prose-slate max-w-none">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      rehypePlugins={[rehypeSanitize]}
+                    >
                       {msg.content}
                     </ReactMarkdown>
                   </div>
