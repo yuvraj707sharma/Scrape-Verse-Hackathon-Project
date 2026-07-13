@@ -656,20 +656,7 @@ export default function App() {
             <FileText className="w-3.5 h-3.5" />
           </button>
  
-          <div className="pt-6 border-t border-slate-100 mt-6 px-1.5">
-            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">Monitoring Scope</p>
-            <div className="space-y-1.5">
-              <div className="flex justify-between items-center text-[11px] text-slate-500 font-semibold">
-                <span>Tracked keywords:</span>
-                <span className="font-black text-slate-700">{keywords.length}</span>
-              </div>
-              <div className="flex justify-between items-center text-[11px] text-slate-500 font-semibold">
-                <span>Rival colleges:</span>
-                <span className="font-black text-slate-700">{competitors.length}</span>
-              </div>
 
-            </div>
-          </div>
         </nav>
  
         {/* User Info / Foot Section */}
