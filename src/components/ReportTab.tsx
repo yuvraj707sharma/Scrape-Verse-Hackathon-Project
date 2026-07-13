@@ -46,8 +46,25 @@ export default function ReportTab() {
         {report && (
           <div className="flex gap-3">
             <button 
+              onClick={() => {
+                const blob = new Blob([report || ''], { type: 'text/markdown' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `JU_Social_Analyzer_Report_${new Date().toISOString().split('T')[0]}.md`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+              }}
+              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-sm font-semibold rounded-lg transition-colors shadow-sm"
+            >
+              <Download className="w-4 h-4" />
+              Download
+            </button>
+            <button 
               onClick={() => window.print()}
-              className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-sm font-semibold rounded-lg transition-colors border border-slate-700"
+              className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-sm font-semibold rounded-lg transition-colors border border-slate-700 shadow-sm"
             >
               <Printer className="w-4 h-4" />
               Print

@@ -55,7 +55,7 @@ export async function fetchMentionsFromDB(): Promise<Mention[]> {
         ma.program, ma.positives, ma.negatives
       FROM mentions m
       LEFT JOIN mentions_analyzed ma ON m.id = ma.mention_id
-      ORDER BY m.id DESC LIMIT 500
+      ORDER BY m.id DESC LIMIT 10000
     `;
     const result = await pool.query(query);
     
