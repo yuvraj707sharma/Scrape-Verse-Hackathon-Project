@@ -1,7 +1,11 @@
 import { GoogleGenAI } from '@google/genai';
 import { saveHealthLog } from './db.js';
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const apiKey = process.env.GEMINI_API_KEY;
+if (!apiKey) {
+  console.warn('⚠️  GEMINI_API_KEY not set. Self-Healing Sentinel will be disabled.');
+}
+const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
 
 export async function healDocPayload(rawPayload: any, errorDetails: string) {
   const prompt = `
@@ -28,17 +32,24 @@ Return JSON strictly matching this schema:
   "explanation": "..."
 }`;
 
+  if (!ai) {
+    throw new Error('Gemini API key not configured. Set GEMINI_API_KEY in .env');
+  }
+
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-3.5-flash',
+      model: 'gemini-3.6-flash',
       contents: prompt,
       config: {
         responseMimeType: 'application/json'
       }
     });
 
-    const text = response.text();
-    const result = JSON.parse(text);
+    const text = response.text;
+    if (!text) throw new Error('Empty response from Gemini');
+    // Strip markdown code fences if present
+    const cleaned = text.replace(/^```json\s*/i, '').replace(/\s*```$/i, '').trim();
+    const result = JSON.parse(cleaned);
 
     // Save telemetry
     saveHealthLog({

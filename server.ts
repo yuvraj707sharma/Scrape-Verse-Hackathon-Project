@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
+import 'dotenv/config';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -11,7 +11,7 @@ import trendRoutes from './backend/routes/trendRoutes.js';
 import scriptRoutes from './backend/routes/scriptRoutes.js';
 import healthRoutes from './backend/routes/healthRoutes.js';
 
-dotenv.config();
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

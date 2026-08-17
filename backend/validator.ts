@@ -11,7 +11,7 @@ export const DocPayloadSchema = z.object({
   url: z.string().url(),
   title: z.string().min(1, "Title is missing"),
   version: z.string().default("latest"),
-  codeBlocks: z.array(z.string()).min(1, "No code blocks extracted"),
+  codeBlocks: z.array(z.string()).default([]),
   breakingChanges: z.array(z.object({
     heading: z.string(),
     content: z.string()

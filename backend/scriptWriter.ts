@@ -1,7 +1,8 @@
 import { GoogleGenAI } from '@google/genai';
 import db from './db.js';
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const apiKey = process.env.GEMINI_API_KEY;
+const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
 
 export async function generateMediaScript(topic: string, format: 'blog' | 'youtube' | 'newsletter') {
   // Fetch latest trends and doc changes from DB to ground the script
@@ -27,13 +28,17 @@ If format is 'newsletter', make it concise and scannable.
 Ensure it mentions some of the context data if relevant.
 `;
 
+  if (!ai) {
+    throw new Error('Script generation failed: GEMINI_API_KEY not set in .env');
+  }
+
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-3.5-flash',
+      model: 'gemini-3.6-flash',
       contents: prompt
     });
 
-    const markdownOutput = response.text() || 'Failed to generate content.';
+    const markdownOutput = response.text || 'Failed to generate content.';
 
     // Save to database
     const insert = db.prepare(`
