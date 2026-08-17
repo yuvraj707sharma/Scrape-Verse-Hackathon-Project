@@ -13,6 +13,9 @@ import healthRoutes from './backend/routes/healthRoutes.js';
 
 
 
+import sourceRoutes from './backend/routes/sourceRoutes.js';
+import chatRoutes from './backend/routes/chatRoutes.js';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -23,6 +26,8 @@ app.use(cors());
 app.use(express.json());
 
 // API Routes
+app.use('/api', sourceRoutes);
+app.use('/api', chatRoutes);
 app.use('/api', ingestRoutes);
 app.use('/api', skillRoutes);
 app.use('/api', ragRoutes);

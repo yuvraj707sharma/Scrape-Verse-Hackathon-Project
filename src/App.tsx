@@ -1,72 +1,88 @@
 import React, { useState } from 'react';
-import { Activity, ShieldAlert, Cpu, BookOpen } from 'lucide-react';
+import Sidebar from './components/Sidebar';
+import SourcesPanel from './components/SourcesPanel';
+import ChatPanel from './components/ChatPanel';
 import EcosystemRadarTab from './components/EcosystemRadarTab';
-import AgentSkillsTab from './components/AgentSkillsTab';
 import ContentStudioTab from './components/ContentStudioTab';
 import TelemetryHubTab from './components/TelemetryHubTab';
 
 function App() {
-  const [activeTab, setActiveTab] = useState('radar');
+  const [activeTab, setActiveTab] = useState('workspace'); // workspace | radar | studio | telemetry
+  const [activePrompt, setActivePrompt] = useState('');
+
+  const handleAskAboutSource = (sourceTitle: string) => {
+    setActivePrompt(`What are the latest API changes and patterns in ${sourceTitle}?`);
+  };
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100 font-sans">
-      <header className="bg-slate-800 border-b border-slate-700 py-4 px-8 flex justify-between items-center">
-        <div className="flex items-center space-x-3">
-          <div className="bg-emerald-500 p-2 rounded-lg">
-            <Cpu size={24} className="text-white" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-cyan-400">
-              DevVerse Hub
-            </h1>
-            <p className="text-xs text-slate-400">Autonomous Developer Ecosystem & AI Skill Engine</p>
-          </div>
-        </div>
-        <div className="flex items-center space-x-2 bg-slate-700 px-3 py-1.5 rounded-full border border-slate-600">
-          <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
-          <span className="text-sm font-medium text-emerald-300">Bright Data Scraper Studio: ACTIVE</span>
-        </div>
-      </header>
+    <div className="flex h-screen bg-[#F8F9FA] text-[#1A0706] font-sans antialiased overflow-hidden">
+      {/* Left Navigation Sidebar */}
+      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
 
-      <div className="flex">
-        <aside className="w-64 min-h-[calc(100vh-80px)] bg-slate-800/50 border-r border-slate-700 p-4">
-          <nav className="space-y-2">
-            <button
-              onClick={() => setActiveTab('radar')}
-              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'radar' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'text-slate-400 hover:bg-slate-700 hover:text-slate-200'}`}
-            >
-              <Activity size={20} />
-              <span className="font-medium">Ecosystem Radar</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('skills')}
-              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'skills' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'text-slate-400 hover:bg-slate-700 hover:text-slate-200'}`}
-            >
-              <Cpu size={20} />
-              <span className="font-medium">Agent Skills & API</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('studio')}
-              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'studio' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'text-slate-400 hover:bg-slate-700 hover:text-slate-200'}`}
-            >
-              <BookOpen size={20} />
-              <span className="font-medium">Content Studio</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('telemetry')}
-              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'telemetry' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'text-slate-400 hover:bg-slate-700 hover:text-slate-200'}`}
-            >
-              <ShieldAlert size={20} />
-              <span className="font-medium">Telemetry & Health</span>
-            </button>
-          </nav>
-        </aside>
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
+        {/* Top Header Bar */}
+        <header className="h-14 bg-white border-b border-[#EDE6E6] px-8 flex items-center justify-between flex-shrink-0">
+          <div className="flex items-center space-x-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+              Workspace
+            </span>
+            <span className="text-slate-300">/</span>
+            <span className="text-xs font-bold text-[#1A0706]">
+              {activeTab === 'workspace' && 'Live RAG & Sources'}
+              {activeTab === 'radar' && 'Ecosystem Radar'}
+              {activeTab === 'studio' && 'Content Studio'}
+              {activeTab === 'telemetry' && 'Telemetry & Health'}
+            </span>
+          </div>
 
-        <main className="flex-1 p-8 overflow-y-auto h-[calc(100vh-80px)]">
-          {activeTab === 'radar' && <EcosystemRadarTab />}
-          {activeTab === 'skills' && <AgentSkillsTab />}
-          {activeTab === 'studio' && <ContentStudioTab />}
-          {activeTab === 'telemetry' && <TelemetryHubTab />}
+          <div className="flex items-center space-x-3">
+            {/* Live System Badge matching Image 2 */}
+            <div className="flex items-center space-x-1.5 bg-[#FFF5F5] border border-[#FEE2E2] px-3 py-1 rounded-full">
+              <span className="w-2 h-2 rounded-full bg-[#DD0200] animate-pulse"></span>
+              <span className="text-xs font-bold text-[#55100D]">Live System</span>
+            </div>
+
+            <div className="hidden sm:flex items-center space-x-1.5 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+              <span className="text-[11px] font-semibold text-emerald-700">Bright Data Scraper Studio: ACTIVE</span>
+            </div>
+          </div>
+        </header>
+
+        {/* Dynamic Tab Body */}
+        <main className="flex-1 p-6 overflow-hidden min-h-0">
+          {activeTab === 'workspace' && (
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full min-h-0">
+              {/* Left Column: Sources Panel (5 Cols) */}
+              <div className="lg:col-span-5 h-full min-h-0 overflow-y-auto pr-1">
+                <SourcesPanel onAskAboutSource={handleAskAboutSource} />
+              </div>
+
+              {/* Right Column: Notebook-Style Cited Chat Panel (7 Cols) */}
+              <div className="lg:col-span-7 h-full min-h-0">
+                <ChatPanel initialPrompt={activePrompt} />
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'radar' && (
+            <div className="h-full overflow-y-auto pr-1">
+              <EcosystemRadarTab />
+            </div>
+          )}
+
+          {activeTab === 'studio' && (
+            <div className="h-full overflow-y-auto pr-1">
+              <ContentStudioTab />
+            </div>
+          )}
+
+          {activeTab === 'telemetry' && (
+            <div className="h-full overflow-y-auto pr-1">
+              <TelemetryHubTab />
+            </div>
+          )}
         </main>
       </div>
     </div>
