@@ -37,7 +37,7 @@ export interface Mention {
   negatives: string[];
   isFlagged: boolean; // Early warning indicator for serious issues
   escalationReason?: string;
-  program?: string; // JECRC Academic Program tag (e.g., Computer Science, Mechanical Engineering, etc.)
+  program?: string; // Academic Program tag (e.g., Computer Science, Mechanical Engineering, etc.)
 }
 
 export interface AnalysisSummary {
