@@ -229,6 +229,14 @@ export function getTechTrends() {
   return db.prepare('SELECT * FROM tech_trends ORDER BY created_at DESC LIMIT 50').all();
 }
 
+export function saveTechTrend(trend: { repo_name: string, stars: number, language: string, description: string }) {
+  const insert = db.prepare(`
+    INSERT INTO tech_trends (id, repo_name, stars, language, description)
+    VALUES (?, ?, ?, ?, ?)
+  `);
+  insert.run(crypto.randomUUID(), trend.repo_name, trend.stars, trend.language, trend.description);
+}
+
 export function getAllSources() {
   return db.prepare('SELECT * FROM sources ORDER BY created_at DESC').all();
 }
